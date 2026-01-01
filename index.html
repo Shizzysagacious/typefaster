@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Word Rain: A Cyberpunk Typing Speed Trainer. Test your WPM, improve your keyboard precision, and hack the mainframe in this arcade typing game.">
+  <meta name="keywords" content="typing game, wpm test, speed typing, cyberpunk game, coding practice, keyboard trainer, programmer game">
+  <meta name="author" content="GitHub User">
+  <meta name="theme-color" content="#050510">
+  
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Word Rain | Cyberpunk WPM Trainer">
+  <meta property="og:description" content="Can you handle the data stream? Test your typing speed and precision in this hardcore cyberpunk arcade game.">
+  <meta property="og:url" content="https://your-username.github.io/word-rain/"> <meta property="og:image" content="https://via.placeholder.com/1200x630/050510/00f3ff?text=WORD+RAIN+GAME"> <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Word Rain | WPM Trainer">
+  <meta name="twitter:description" content="Test your typing speed. Don't let the words hit the floor.">
+  <meta name="twitter:image" content="https://via.placeholder.com/1200x630/050510/00f3ff?text=WORD+RAIN+GAME">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⌨️</text></svg>">
+
+  <title>Word Rain | WPM Trainer</title>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #00f3ff;
+      --secondary: #bc13fe;
+      --bg-dark: #050510;
+      --error: #ff003c;
+      --success: #00ff9d;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: var(--bg-dark);
+      font-family: 'JetBrains Mono', monospace;
+      color: white;
+      height: 100vh;
+      width: 100vw;
+      position: fixed;
+    }
+
+    /* INVISIBLE INPUT TRAP */
+    #hidden-input {
+      position: absolute;
+      opacity: 0;
+      top: 0; left: 0; height: 100%; width: 100%;
+      z-index: 10;
+      cursor: default;
+    }
+
+    /* CRT SCANLINE OVERLAY */
+    .crt::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      z-index: 50;
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none;
+    }
+
+    #game-ui {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
+    }
+
+    .hud-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      text-shadow: 0 0 10px var(--primary);
+    }
+
+    .hud-title h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.4rem;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1.2;
+    }
+
+    .hud-stats {
+      display: flex;
+      gap: 25px;
+      text-align: right;
+    }
+
+    .stat-box { display: flex; flex-direction: column; }
+    .stat-label { font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-value { font-size: 1.4rem; font-weight: 800; font-family: 'Orbitron'; color: var(--primary); }
+    .wpm-val { color: var(--success); }
+
+    .input-zone {
+      margin-bottom: 30px;
+      text-align: center;
+      width: 100%;
+      pointer-events: none;
+    }
+
+    #current-input {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3rem;
+      font-weight: 900;
+      color: white;
+      text-shadow: 0 0 15px var(--primary);
+      min-height: 60px;
+      display: inline-block;
+      border-bottom: 2px solid rgba(0, 243, 255, 0.3);
+      padding: 0 15px;
+    }
+
+    /* MODAL SCREENS */
+    #start-screen, #game-over-screen {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(5, 5, 16, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+      text-align: center;
+      padding: 20px;
+    }
+
+    .skill-tagline {
+      color: white;
+      font-family: 'JetBrains Mono';
+      font-size: 0.9rem;
+      margin-top: 5px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      border-bottom: 1px solid var(--secondary);
+      padding-bottom: 10px;
+    }
+
+    .btn {
+      background: rgba(0, 243, 255, 0.1);
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      padding: 16px 45px;
+      font-family: 'Orbitron';
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 15px;
+      text-transform: uppercase;
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+      pointer-events: auto;
+      transition: all 0.2s;
+      min-width: 220px;
+    }
+    
+    .btn:hover { background: rgba(0, 243, 255, 0.2); box-shadow: 0 0 25px rgba(0, 243, 255, 0.4); }
+    .btn:active { background: var(--primary); color: #000; transform: scale(0.98); }
+
+    .btn.secondary {
+      border-color: var(--secondary);
+      color: var(--secondary);
+      box-shadow: 0 0 15px rgba(188, 19, 254, 0.2);
+    }
+    .btn.secondary:hover { background: rgba(188, 19, 254, 0.2); box-shadow: 0 0 25px rgba(188, 19, 254, 0.4); }
+    .btn.secondary:active { background: var(--secondary); color: white; }
+
+    .hidden { display: none !important; }
+
+    .wpm-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 25px;
+      background: rgba(255,255,255,0.03);
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    #copy-msg {
+      margin-top: 15px;
+      font-size: 0.8rem;
+      color: var(--success);
+      height: 20px;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    /* ERROR ANIMATION */
+    .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+  </style>
+</head>
+<body class="crt">
+
+  <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+  <canvas id="game-canvas"></canvas>
+
+  <div id="game-ui">
+    <header class="hud-header">
+      <div class="hud-title">
+        <h1>WORD RAIN<br><span style="font-size:0.7rem; color:#888; letter-spacing: 2px;">V1.0.0 PROD</span></h1>
+      </div>
+      <div class="hud-stats">
+        <div class="stat-box">
+          <span class="stat-label">WPM</span>
+          <span class="stat-value wpm-val" id="wpm-val">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Time</span>
+          <span class="stat-value" id="time-val">0s</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Score</span>
+          <span class="stat-value" id="score-val">0</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="input-zone">
+      <div id="current-input"></div>
+    </div>
+  </div>
+
+  <div id="start-screen">
+    <h1 style="font-family:'Orbitron'; color:var(--primary); font-size: 2.8rem; margin-bottom: 5px; text-shadow: 0 0 20px var(--primary);">SYSTEM READY</h1>
+    <div class="skill-tagline">
+      Increase your Typing WPM<br>Speed & Precision
+    </div>
+    <p style="color: #888; font-size: 0.85rem; max-width: 420px; margin-bottom: 30px; line-height: 1.5;">
+      Neural link established. Words will descend from the datastream.<br>
+      Type them before they crash. Difficulty adapts every 60s.
+    </p>
+    <button class="btn" id="start-btn"><i class="fa-solid fa-power-off"></i> INITIATE HACK</button>
+  </div>
+
+  <div id="game-over-screen" class="hidden">
+    <h1 style="font-family:'Orbitron'; color:var(--error); font-size: 2.5rem; text-shadow: 0 0 20px var(--error);">CONNECTION LOST</h1>
+    
+    <div class="wpm-grid">
+      <div class="stat-box" style="align-items: center;">
+        <span class="stat-label">Final WPM</span>
+        <span class="stat-value wpm-val" id="final-wpm" style="font-size: 2.5rem;">0</span>
+      </div>
+      <div class="stat-box" style="align-items: center;">
+        <span class="stat-label">Total Score</span>
+        <span class="stat-value" id="final-score" style="font-size: 2.5rem;">0</span>
+      </div>
+    </div>
+    
+    <p id="final-time" style="color:#aaa; margin-bottom:20px; font-size: 0.9rem; font-family: 'JetBrains Mono';">Survival Time: 0s</p>
+    
+    <button class="btn" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> REBOOT SYSTEM</button>
+    <button class="btn secondary" id="share-btn"><i class="fa-solid fa-share-nodes"></i> SHARE RESULT</button>
+    <div id="copy-msg">Result copied to clipboard</div>
+  </div>
+
+  <script>
+    /** * WORD RAIN - PRODUCTION BUILD
+     * Github Ready Version
+     */
+
+    // --- CONFIG ---
+    const CANVAS = document.getElementById('game-canvas');
+    const CTX = CANVAS.getContext('2d');
+    const HIDDEN_INPUT = document.getElementById('hidden-input');
+    const UI_DISPLAY = document.getElementById('current-input');
+    let animationFrameId; // To manage loop cancellation
+    
+    function resize() {
+      CANVAS.width = window.innerWidth;
+      CANVAS.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // --- DICTIONARY ---
+    const WORDS = {
+      short: ['bit','cpu','ram','git','css','api','dev','bug','net','sql','run','var','int','exe','log','key','web','bot','app','zip','code','byte','node','json','void','null','sudo','bash','root','echo','ping','host'],
+      medium: ['python','hacker','server','cyber','script','docker','cloud','proxy','token','deploy','matrix','binary','logic','pixel','crypto','socket','module','kernel','secure','access','client','router','uptime','config','buffer'],
+      long: ['algorithm','encryption','mainframe','javascript','bandwidth','firewall','protocol','database','interface','processor','backdoor','gigabyte','repository','middleware','connection','framework','throughput','resolution','developer','kubernetes'],
+      boss: ['virtualization','authentication','infrastructure','decentralized','vulnerability','microservices','cryptography','configuration','asynchronous','polymorphism','administrator','synchronization','implementation']
+    };
+
+    // --- STATE MANAGEMENT ---
+    let state = {
+      running: false,
+      words: [],
+      particles: [],
+      score: 0,
+      startTime: 0,
+      lastSpawn: 0,
+      totalCharsCorrect: 0,
+      wpm: 0
+    };
+
+    // --- CLASSES ---
+
+    class Word {
+      constructor(text, type) {
+        this.text = text;
+        this.x = Math.random() * (CANVAS.width - 150) + 75; // Padding from edges
+        this.y = -50;
+        
+        // Progressive Difficulty Calculation
+        const elapsedSeconds = (Date.now() - state.startTime) / 1000;
+        let timeMultiplier = 1 + (elapsedSeconds * 0.015); // Gently increases speed over time
+        
+        if(type === 'short') {
+          this.speed = (1.5 * timeMultiplier) + 1.2; 
+          this.color = '#00ff9d'; 
+          this.size = 22;
+        } else if(type === 'medium') {
+          this.speed = (1.5 * timeMultiplier) + 0.7; 
+          this.color = '#00f3ff'; 
+          this.size = 26;
+        } else if(type === 'long') {
+          this.speed = (1.5 * timeMultiplier) * 0.95; 
+          this.color = '#bc13fe'; 
+          this.size = 30;
+        } else {
+          this.speed = (1.5 * timeMultiplier) * 0.7; 
+          this.color = '#ff003c'; 
+          this.size = 36;
+        }
+      }
+
+      update() { this.y += this.speed; }
+
+      draw() {
+        CTX.font = `bold ${this.size}px 'Orbitron'`;
+        
+        // Glow effect
+        CTX.shadowBlur = 15;
+        CTX.shadowColor = this.color;
+        CTX.fillStyle = this.color;
+        CTX.fillText(this.text, this.x, this.y);
+        
+        // Highlight typed portion
+        const currentInput = HIDDEN_INPUT.value.toLowerCase();
+        if (currentInput.length > 0 && this.text.startsWith(currentInput)) {
+          CTX.fillStyle = '#ffffff';
+          CTX.shadowBlur = 0;
+          CTX.fillText(currentInput, this.x, this.y);
+        }
+        CTX.shadowBlur = 0;
+      }
+    }
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x; this.y = y; this.color = color;
+        this.vx = (Math.random() - 0.5) * 12;
+        this.vy = (Math.random() - 0.5) * 12;
+        this.life = 1;
+      }
+      update() { this.x += this.vx; this.y += this.vy; this.life -= 0.04; }
+      draw() {
+        CTX.globalAlpha = this.life;
+        CTX.fillStyle = this.color;
+        CTX.beginPath();
+        CTX.arc(this.x, this.y, 3, 0, Math.PI*2);
+        CTX.fill();
+        CTX.globalAlpha = 1;
+      }
+    }
+
+    // --- GAME ENGINE ---
+
+    function spawn() {
+      // CAP LIMIT: Prevents screen clutter
+      if (state.words.length >= 8) return; 
+
+      const elapsed = Date.now() - state.startTime;
+      let pool = [...WORDS.short];
+      
+      // Difficulty Stages
+      if(elapsed > 60000) pool = pool.concat(WORDS.medium);
+      if(elapsed > 120000) pool = pool.concat(WORDS.long);
+      if(elapsed > 180000) pool = pool.concat(WORDS.boss);
+
+      const text = pool[Math.floor(Math.random() * pool.length)];
+      
+      // Duplicate Protection
+      if (state.words.some(w => w.text === text)) return;
+
+      let type = 'short';
+      if(text.length > 10) type = 'boss';
+      else if(text.length > 7) type = 'long';
+      else if(text.length > 4) type = 'medium';
+
+      state.words.push(new Word(text, type));
+    }
+
+    function loop() {
+      if(!state.running) return;
+      
+      CTX.clearRect(0, 0, CANVAS.width, CANVAS.height);
+
+      // 1. Update HUD Time
+      const elapsedSeconds = Math.max(1, (Date.now() - state.startTime) / 1000);
+      document.getElementById('time-val').textContent = Math.floor(elapsedSeconds) + 's';
+
+      // 2. Calculate WPM (Standard Formula: (Chars / 5) / Minutes)
+      const minutes = elapsedSeconds / 60;
+      state.wpm = Math.round((state.totalCharsCorrect / 5) / minutes);
+      document.getElementById('wpm-val').textContent = state.wpm;
+
+      // 3. Spawning Logic
+      const difficulty = Math.min(1200, Math.floor(elapsedSeconds * 12)); 
+      const currentSpawnRate = Math.max(700, 2000 - difficulty);
+
+      if(Date.now() - state.lastSpawn > currentSpawnRate) {
+        spawn();
+        state.lastSpawn = Date.now();
+      }
+
+      // 4. Word Updates
+      for(let i = state.words.length-1; i>=0; i--) {
+        let w = state.words[i];
+        w.update();
+        w.draw();
+
+        if(w.y > CANVAS.height + 20) gameOver();
+      }
+
+      // 5. Particle Updates
+      for(let i=state.particles.length-1; i>=0; i--) {
+        let p = state.particles[i];
+        p.update();
+        p.draw();
+        if(p.life <= 0) state.particles.splice(i,1);
+      }
+
+      animationFrameId = requestAnimationFrame(loop);
+    }
+
+    // --- INPUT HANDLERS ---
+
+    document.addEventListener('click', () => {
+      if(state.running) HIDDEN_INPUT.focus();
+    });
+
+    HIDDEN_INPUT.addEventListener('input', (e) => {
+      if(!state.running) return;
+
+      const val = HIDDEN_INPUT.value.toLowerCase().trim();
+      UI_DISPLAY.textContent = val;
+
+      // Find Match
+      const matchIndex = state.words.findIndex(w => w.text === val);
+
+      if(matchIndex !== -1) {
+        // --- MATCH FOUND ---
+        const w = state.words[matchIndex];
+        
+        // Update Stats
+        state.totalCharsCorrect += w.text.length + 1; // +1 includes the 'space' or 'enter' effort
+        state.score += w.text.length * 10;
+        document.getElementById('score-val').textContent = state.score;
+        
+        // VFX
+        for(let k=0; k<12; k++) state.particles.push(new Particle(w.x + 20, w.y, w.color));
+        
+        // Cleanup
+        state.words.splice(matchIndex, 1);
+        HIDDEN_INPUT.value = ''; 
+        UI_DISPLAY.textContent = '';
+      } else {
+        // --- NO MATCH ---
+        // Check if the current input is at least the START of a word on screen
+        const isPrefix = state.words.some(w => w.text.startsWith(val));
+        
+        if(!isPrefix && val.length > 0) {
+          // ERROR STATE
+          UI_DISPLAY.style.color = 'var(--error)';
+          document.body.classList.add('shake');
+          setTimeout(() => {
+            document.body.classList.remove('shake');
+            UI_DISPLAY.style.color = 'white';
+            HIDDEN_INPUT.value = ''; // Reset input on error
+            UI_DISPLAY.textContent = '';
+          }, 200);
+        } else {
+            UI_DISPLAY.style.color = 'white';
+        }
+      }
+    });
+
+    // --- CONTROL FLOW ---
+
+    document.getElementById('start-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('start-screen').classList.add('hidden');
+      
+      // Reset State
+      if(animationFrameId) cancelAnimationFrame(animationFrameId);
+      
+      state = { 
+        running: true, 
+        words: [], 
+        particles: [], 
+        score: 0, 
+        startTime: Date.now(), 
+        lastSpawn: Date.now(), 
+        totalCharsCorrect: 0,
+        wpm: 0
+      };
+      
+      // Reset UI
+      HIDDEN_INPUT.value = '';
+      UI_DISPLAY.textContent = '';
+      document.getElementById('score-val').textContent = '0';
+      document.getElementById('time-val').textContent = '0s';
+      document.getElementById('wpm-val').textContent = '0';
+
+      HIDDEN_INPUT.focus();
+      loop();
+    });
+
+    // Share Button Logic
+    document.getElementById('share-btn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const text = `I reached ${state.wpm} WPM with a score of ${state.score} in Word Rain! Can you hack the system?`;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Word Rain Score',
+            text: text,
+            url: window.location.href
+          });
+        } catch (err) { console.log('Share closed'); }
+      } else {
+        navigator.clipboard.writeText(text).then(() => {
+          const msg = document.getElementById('copy-msg');
+          msg.style.opacity = 1;
+          setTimeout(() => msg.style.opacity = 0, 2000);
+        });
+      }
+    });
+
+    function gameOver() {
+      state.running = false;
+      HIDDEN_INPUT.blur();
+      cancelAnimationFrame(animationFrameId);
+      
+      document.getElementById('game-over-screen').classList.remove('hidden');
+      document.getElementById('final-score').textContent = state.score;
+      document.getElementById('final-wpm').textContent = state.wpm;
+      
+      const seconds = Math.floor((Date.now() - state.startTime) / 1000);
+      document.getElementById('final-time').textContent = "Survival Time: " + seconds + "s";
+    }
+
+  </script>
+</body>
+</html>
