@@ -3,26 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="Word Rain: A Cyberpunk Typing Speed Trainer. Test your WPM, improve your keyboard precision, and hack the mainframe in this arcade typing game.">
-  <meta name="keywords" content="typing game, wpm test, speed typing, cyberpunk game, coding practice, keyboard trainer, programmer game">
-  <meta name="author" content="GitHub User">
+  <meta name="description" content="Word Rain: Endless Cyberpunk Typing. Beat your High Score.">
   <meta name="theme-color" content="#050510">
   
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Word Rain | Cyberpunk WPM Trainer">
-  <meta property="og:description" content="Can you handle the data stream? Test your typing speed and precision in this hardcore cyberpunk arcade game.">
-  <meta property="og:url" content="https://your-username.github.io/word-rain/"> <meta property="og:image" content="https://via.placeholder.com/1200x630/050510/00f3ff?text=WORD+RAIN+GAME"> <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Word Rain | WPM Trainer">
-  <meta name="twitter:description" content="Test your typing speed. Don't let the words hit the floor.">
-  <meta name="twitter:image" content="https://via.placeholder.com/1200x630/050510/00f3ff?text=WORD+RAIN+GAME">
+  <meta property="og:title" content="Word Rain | Endless Mode">
+  <meta property="og:description" content="New High Score Achieved! Can you beat the mainframe?">
+  <meta property="og:image" content="share.png"> 
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⌨️</text></svg>">
 
-  <title>Word Rain | WPM Trainer</title>
-  
+  <title>Word Rain | Endless</title>
+    
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;800&display=swap" rel="stylesheet">
-  
+    
   <style>
     :root {
       --primary: #00f3ff;
@@ -30,6 +25,7 @@
       --bg-dark: #050510;
       --error: #ff003c;
       --success: #00ff9d;
+      --gold: #ffd700;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
@@ -96,14 +92,88 @@
 
     .hud-stats {
       display: flex;
-      gap: 25px;
+      gap: 15px;
       text-align: right;
+      align-items: center;
     }
 
     .stat-box { display: flex; flex-direction: column; }
     .stat-label { font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-    .stat-value { font-size: 1.4rem; font-weight: 800; font-family: 'Orbitron'; color: var(--primary); }
+    .stat-value { font-size: 1.2rem; font-weight: 800; font-family: 'Orbitron'; color: var(--primary); }
     .wpm-val { color: var(--success); }
+    
+    /* PAUSE BUTTON (New) */
+    .pause-btn-hud {
+      pointer-events: auto;
+      background: rgba(0, 243, 255, 0.1);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      width: 35px; height: 35px;
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      margin-left: 10px;
+      transition: all 0.2s;
+    }
+    .pause-btn-hud:hover {
+      background: var(--primary);
+      color: #000;
+      box-shadow: 0 0 15px var(--primary);
+    }
+     
+    /* COMBO INDICATOR */
+    #combo-box {
+      margin-top: 10px;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .combo-active { opacity: 1 !important; transform: scale(1.1); }
+    .combo-text { font-family: 'Orbitron'; font-weight: 900; font-size: 1.5rem; color: var(--gold); text-shadow: 0 0 15px var(--gold); }
+    .combo-label { font-size: 0.7rem; color: white; }
+
+    /* POWERUP TRAY */
+    .powerup-tray {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .powerup-slot {
+      width: 50px; height: 50px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.3);
+      font-size: 1.2rem;
+      position: relative;
+      transition: all 0.3s;
+    }
+    
+    /* Active state when typed */
+    .powerup-slot.active-effect {
+      border-color: var(--success);
+      color: var(--success);
+      box-shadow: 0 0 15px var(--success);
+      background: rgba(0, 255, 157, 0.1);
+      transform: scale(1.1);
+    }
+
+    .powerup-key {
+      position: absolute;
+      bottom: -18px;
+      font-size: 0.5rem;
+      color: #666;
+      font-family: 'JetBrains Mono';
+      width: 150%;
+      text-align: center;
+      white-space: nowrap;
+    }
 
     .input-zone {
       margin-bottom: 30px;
@@ -125,7 +195,7 @@
     }
 
     /* MODAL SCREENS */
-    #start-screen, #game-over-screen {
+    #start-screen, #game-over-screen, #pause-screen {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(5, 5, 16, 0.95);
@@ -149,6 +219,41 @@
       letter-spacing: 3px;
       border-bottom: 1px solid var(--secondary);
       padding-bottom: 10px;
+    }
+
+    /* DIFFICULTY SELECTOR */
+    .diff-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 25px;
+    }
+    
+    .diff-btn {
+      background: transparent;
+      border: 1px solid #444;
+      color: #888;
+      padding: 8px 15px;
+      font-family: 'Orbitron';
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    
+    .diff-btn:hover { border-color: var(--primary); color: white; }
+    
+    .diff-btn.selected {
+      background: rgba(0, 243, 255, 0.2);
+      border-color: var(--primary);
+      color: var(--primary);
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+    }
+
+    /* INSANE MODE STYLE */
+    .diff-btn[data-diff="insane"].selected {
+      border-color: var(--error);
+      color: var(--error);
+      background: rgba(255, 0, 60, 0.2);
+      box-shadow: 0 0 15px var(--error);
     }
 
     .btn {
@@ -190,6 +295,28 @@
       padding: 20px;
       border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.1);
+      position: relative;
+    }
+
+    /* DIFFICULTY BADGE IN GAME OVER */
+    .diff-badge-display {
+        position: absolute;
+        top: -12px;
+        right: 15px;
+        background: var(--bg-dark);
+        border: 1px solid var(--primary);
+        color: var(--primary);
+        font-family: 'Orbitron';
+        font-size: 0.7rem;
+        padding: 2px 10px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .diff-badge-display.insane {
+        border-color: var(--error);
+        color: var(--error);
+        box-shadow: 0 0 10px rgba(255,0,60,0.3);
     }
 
     #copy-msg {
@@ -200,6 +327,31 @@
       opacity: 0;
       transition: opacity 0.5s;
     }
+    
+    /* NEW HIGH SCORE ANIMATION */
+    .highscore-banner {
+        font-family: 'Orbitron';
+        font-size: 1.2rem;
+        margin: 20px 0;
+        white-space: nowrap;
+        overflow: hidden;
+        width: 0;
+        opacity: 0;
+        color: var(--gold);
+        text-shadow: 0 0 10px var(--gold);
+    }
+
+    .highscore-banner.animate {
+        animation: slideRight 2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        width: 100%;
+        opacity: 1;
+        border-right: 2px solid var(--gold);
+    }
+
+    @keyframes slideRight {
+        0% { width: 0; opacity: 0; transform: translateX(-50px); }
+        100% { width: 100%; opacity: 1; transform: translateX(0); }
+    }
 
     /* ERROR ANIMATION */
     .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
@@ -209,6 +361,15 @@
       30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
       40%, 60% { transform: translate3d(4px, 0, 0); }
     }
+    
+    .screen-flash {
+        position: absolute; top:0; left:0; width:100%; height:100%;
+        background: rgba(255, 0, 60, 0.3);
+        z-index: 60;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.1s;
+    }
   </style>
 </head>
 <body class="crt">
@@ -216,13 +377,24 @@
   <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 
   <canvas id="game-canvas"></canvas>
+  <div class="screen-flash" id="damage-flash"></div>
 
   <div id="game-ui">
     <header class="hud-header">
       <div class="hud-title">
-        <h1>WORD RAIN<br><span style="font-size:0.7rem; color:#888; letter-spacing: 2px;">V1.0.0 PROD</span></h1>
+        <h1>WORD RAIN<br><span style="font-size:0.7rem; color:#888; letter-spacing: 2px;">V2.2</span></h1>
+        
+        <div id="combo-box">
+          <div class="combo-text" id="combo-val">1x</div>
+          <div class="combo-label">COMBO</div>
+        </div>
       </div>
+      
       <div class="hud-stats">
+        <div class="stat-box">
+            <span class="stat-label">Lives</span>
+            <span class="stat-value" id="lives-val" style="color:var(--error)">3</span>
+        </div>
         <div class="stat-box">
           <span class="stat-label">WPM</span>
           <span class="stat-value wpm-val" id="wpm-val">0</span>
@@ -235,8 +407,25 @@
           <span class="stat-label">Score</span>
           <span class="stat-value" id="score-val">0</span>
         </div>
+        <button class="pause-btn-hud" id="ui-pause-btn" onclick="togglePause()">
+            <i class="fa-solid fa-pause"></i>
+        </button>
       </div>
     </header>
+    
+    <div class="powerup-tray">
+      <div class="powerup-slot" id="pu-slow">
+        <i class="fa-solid fa-hourglass-half"></i>
+        <div class="powerup-key">musk</div>
+      </div>
+      <div class="powerup-slot" id="pu-freeze">
+        <i class="fa-regular fa-snowflake"></i> <div class="powerup-key">Leon</div>
+      </div>
+      <div class="powerup-slot" id="pu-double">
+        <i class="fa-solid fa-xmarks-lines"></i>
+        <div class="powerup-key">Dangote</div>
+      </div>
+    </div>
 
     <div class="input-zone">
       <div id="current-input"></div>
@@ -246,39 +435,65 @@
   <div id="start-screen">
     <h1 style="font-family:'Orbitron'; color:var(--primary); font-size: 2.8rem; margin-bottom: 5px; text-shadow: 0 0 20px var(--primary);">SYSTEM READY</h1>
     <div class="skill-tagline">
-      Increase your Typing WPM<br>Speed & Precision
+      Endless Mode • High Score Chaser
     </div>
+    
+    <div class="diff-selector">
+      <button class="diff-btn" onclick="setDiff('easy')" data-diff="easy">EASY</button>
+      <button class="diff-btn selected" onclick="setDiff('normal')" data-diff="normal">NORMAL</button>
+      <button class="diff-btn" onclick="setDiff('hard')" data-diff="hard">HARD</button>
+      <button class="diff-btn" onclick="setDiff('insane')" data-diff="insane">INSANE</button>
+    </div>
+    
+    <div style="margin-bottom: 20px; background: rgba(0,0,0,0.5); padding: 5px 15px; border: 1px solid #333; border-radius: 5px;">
+        <span style="color:#888; font-size: 0.7rem;">CURRENT HIGH SCORE:</span>
+        <span id="start-highscore" style="font-family:'Orbitron'; color: var(--gold); font-size: 1rem;">0</span>
+    </div>
+
     <p style="color: #888; font-size: 0.85rem; max-width: 420px; margin-bottom: 30px; line-height: 1.5;">
-      Neural link established. Words will descend from the datastream.<br>
-      Type them before they crash. Difficulty adapts every 60s.
+      Neural link established. Words will descend endlessly.<br>
+      Type <b style="color:var(--primary)">Special Words</b> to activate Powerups.<br>
+      Miss <b>3 Words</b> and the connection breaks.<br>
     </p>
     <button class="btn" id="start-btn"><i class="fa-solid fa-power-off"></i> INITIATE HACK</button>
+  </div>
+  
+  <div id="pause-screen" class="hidden">
+    <h1 style="font-family:'Orbitron'; color:var(--gold); font-size: 3rem; text-shadow: 0 0 20px var(--gold);">SYSTEM PAUSED</h1>
+    <p style="color:#aaa; margin-top:10px;">Press TAP to Resume</p>
+    <button class="btn" style="margin-top:30px;" onclick="togglePause()">RESUME</button>
   </div>
 
   <div id="game-over-screen" class="hidden">
     <h1 style="font-family:'Orbitron'; color:var(--error); font-size: 2.5rem; text-shadow: 0 0 20px var(--error);">CONNECTION LOST</h1>
     
+    <div id="hs-anim-container" class="highscore-banner">
+        ✨💡 NEW HIGH SCORE! 🔥💎
+    </div>
+
     <div class="wpm-grid">
+      <div id="go-diff-badge" class="diff-badge-display">NORMAL</div>
+
       <div class="stat-box" style="align-items: center;">
-        <span class="stat-label">Final WPM</span>
-        <span class="stat-value wpm-val" id="final-wpm" style="font-size: 2.5rem;">0</span>
+        <span class="stat-label">Final Score</span>
+        <span class="stat-value" id="final-score" style="font-size: 2.5rem; color: white;">0</span>
       </div>
       <div class="stat-box" style="align-items: center;">
-        <span class="stat-label">Total Score</span>
-        <span class="stat-value" id="final-score" style="font-size: 2.5rem;">0</span>
+        <span class="stat-label">Final WPM</span>
+        <span class="stat-value wpm-val" id="final-wpm" style="font-size: 2.5rem; color: var(--success);">0</span>
       </div>
     </div>
     
-    <p id="final-time" style="color:#aaa; margin-bottom:20px; font-size: 0.9rem; font-family: 'JetBrains Mono';">Survival Time: 0s</p>
-    
+    <p style="color:var(--gold); font-size: 0.9rem; font-family: 'JetBrains Mono'; margin-bottom: 20px;">High Score: <span id="final-highscore">0</span></p>
+
     <button class="btn" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> REBOOT SYSTEM</button>
     <button class="btn secondary" id="share-btn"><i class="fa-solid fa-share-nodes"></i> SHARE RESULT</button>
-    <div id="copy-msg">Result is copied to clipboard</div>
+    <div id="copy-msg">Result copied to clipboard</div>
   </div>
 
   <script>
-    /** * WORD RAIN - PRODUCTION BUILD
-     * Github Ready Version
+    /** * WORD RAIN - ENDLESS V2.2
+     * Features: Lives, Special Words, Difficulty, WPM, Endless, Highscore
      */
 
     // --- CONFIG ---
@@ -286,7 +501,11 @@
     const CTX = CANVAS.getContext('2d');
     const HIDDEN_INPUT = document.getElementById('hidden-input');
     const UI_DISPLAY = document.getElementById('current-input');
-    let animationFrameId; // To manage loop cancellation
+    let animationFrameId;
+    
+    // Load High Score
+    let savedHighScore = localStorage.getItem('wordRainHighScore') || 0;
+    document.getElementById('start-highscore').textContent = savedHighScore;
     
     function resize() {
       CANVAS.width = window.innerWidth;
@@ -300,87 +519,148 @@
       short: ['bit','cpu','ram','git','css','api','dev','bug','net','sql','run','var','int','exe','log','key','web','bot','app','zip','code','byte','node','json','void','null','sudo','bash','root','echo','ping','host'],
       medium: ['python','hacker','server','cyber','script','docker','cloud','proxy','token','deploy','matrix','binary','logic','pixel','crypto','socket','module','kernel','secure','access','client','router','uptime','config','buffer'],
       long: ['algorithm','encryption','mainframe','javascript','bandwidth','firewall','protocol','database','interface','processor','backdoor','gigabyte','repository','middleware','connection','framework','throughput','resolution','developer','kubernetes'],
-      boss: ['virtualization','authentication','infrastructure','decentralized','vulnerability','microservices','cryptography','configuration','asynchronous','polymorphism','administrator','synchronization','implementation']
+      // SPECIAL TRIGGER WORDS
+      specialFreeze: ['Leon', 'Aminah', 'BeastJr'],
+      specialSlow: ['musk'],
+      specialDouble: ['Dangote']
     };
 
     // --- STATE MANAGEMENT ---
+    let diffSettings = {
+      easy: { speedMod: 0.7, spawnMod: 1.2 },
+      normal: { speedMod: 1.0, spawnMod: 1.0 },
+      hard: { speedMod: 1.5, spawnMod: 0.8 },
+      insane: { speedMod: 2.0, spawnMod: 0.6 }
+    };
+
     let state = {
       running: false,
+      paused: false,
+      difficulty: 'normal',
       words: [],
       particles: [],
       score: 0,
+      lives: 3,
+      wpm: 0,
       startTime: 0,
+      pauseStartTime: 0,
+      totalPausedTime: 0,
       lastSpawn: 0,
+      lastSpecialSpawn: 0,
       totalCharsCorrect: 0,
-      wpm: 0
+      combo: 0,
+      multiplier: 1,
+      activeEffects: { slow: false, freeze: false, double: false }
     };
+    
+    // --- DIFFICULTY SELECTOR ---
+    function setDiff(level) {
+      state.difficulty = level;
+      document.querySelectorAll('.diff-btn').forEach(btn => {
+        btn.classList.remove('selected');
+        if(btn.dataset.diff === level) btn.classList.add('selected');
+      });
+    }
 
     // --- CLASSES ---
-
     class Word {
-      constructor(text, type) {
+      constructor(text, type, effect = null) {
         this.text = text;
-        this.x = Math.random() * (CANVAS.width - 150) + 75; // Padding from edges
+        this.type = type; // short, medium, long, special
+        this.effect = effect; // null, freeze, slow, double
+        
+        this.x = Math.random() * (CANVAS.width - 200) + 100; 
         this.y = -50;
         
-        // Progressive Difficulty Calculation
-        const elapsedSeconds = (Date.now() - state.startTime) / 1000;
-        let timeMultiplier = 1 + (elapsedSeconds * 0.015); // Gently increases speed over time
-        
-        if(type === 'short') {
-          this.speed = (1.5 * timeMultiplier) + 1.2; 
-          this.color = '#00ff9d'; 
-          this.size = 22;
-        } else if(type === 'medium') {
-          this.speed = (1.5 * timeMultiplier) + 0.7; 
-          this.color = '#00f3ff'; 
-          this.size = 26;
-        } else if(type === 'long') {
-          this.speed = (1.5 * timeMultiplier) * 0.95; 
-          this.color = '#bc13fe'; 
-          this.size = 30;
-        } else {
-          this.speed = (1.5 * timeMultiplier) * 0.7; 
-          this.color = '#ff003c'; 
-          this.size = 36;
+        // Base Speed Calculation
+        let baseSpeed = 1;
+        if(type === 'short') baseSpeed = 1.2;
+        else if(type === 'medium') baseSpeed = 1.0;
+        else if(type === 'long') baseSpeed = 0.8;
+        else if(type === 'special') baseSpeed = 0.5; // Special words fall slightly slower to give chance
+
+        const activeTime = (Date.now() - state.startTime - state.totalPausedTime) / 1000;
+        let timeMultiplier = 1 + (activeTime * 0.015); 
+        const diffMod = diffSettings[state.difficulty].speedMod;
+
+        this.speed = (baseSpeed * timeMultiplier * diffMod) + 0.5;
+        this.baseSpeed = this.speed;
+
+        // Styling based on Effect or Type
+        if(effect === 'freeze') { this.color = '#00f3ff'; this.size = 35; this.glow = true; }
+        else if(effect === 'slow') { this.color = '#ffd700'; this.size = 35; this.glow = true; }
+        else if(effect === 'double') { this.color = '#bc13fe'; this.size = 35; this.glow = true; }
+        else {
+            if(type === 'short') { this.color = '#00ff9d'; this.size = 22; }
+            else if(type === 'medium') { this.color = '#00f3ff'; this.size = 26; }
+            else { this.color = '#bc13fe'; this.size = 30; }
+            this.glow = false;
         }
       }
 
-      update() { this.y += this.speed; }
+      update() { 
+        if (state.activeEffects.freeze) return;
+        
+        let moveSpeed = this.speed;
+        if (state.activeEffects.slow) moveSpeed = this.speed * 0.3;
+
+        this.y += moveSpeed; 
+      }
 
       draw() {
         CTX.font = `bold ${this.size}px 'Orbitron'`;
         
-        // Glow effect
-        CTX.shadowBlur = 15;
-        CTX.shadowColor = this.color;
+        if(this.glow) {
+            CTX.shadowBlur = 20;
+            CTX.shadowColor = this.color;
+        } else {
+            CTX.shadowBlur = 5;
+            CTX.shadowColor = this.color;
+        }
+        
         CTX.fillStyle = this.color;
         CTX.fillText(this.text, this.x, this.y);
         
-        // Highlight typed portion
+        // Input Highlighting
         const currentInput = HIDDEN_INPUT.value.toLowerCase();
-        if (currentInput.length > 0 && this.text.startsWith(currentInput)) {
+        if (currentInput.length > 0 && this.text.toLowerCase().startsWith(currentInput)) {
           CTX.fillStyle = '#ffffff';
           CTX.shadowBlur = 0;
-          CTX.fillText(currentInput, this.x, this.y);
+          const typedPart = this.text.substring(0, currentInput.length);
+          CTX.fillText(typedPart, this.x, this.y);
         }
         CTX.shadowBlur = 0;
       }
     }
 
     class Particle {
-      constructor(x, y, color) {
+      constructor(x, y, color, type = 'normal') {
         this.x = x; this.y = y; this.color = color;
+        this.type = type;
         this.vx = (Math.random() - 0.5) * 12;
         this.vy = (Math.random() - 0.5) * 12;
         this.life = 1;
+        
+        if(type === 'snow') {
+            this.vy = Math.random() * 3 + 1; // Fall down
+            this.vx = (Math.random() - 0.5) * 2;
+            this.life = 2;
+        }
       }
-      update() { this.x += this.vx; this.y += this.vy; this.life -= 0.04; }
+      update() { 
+        this.x += this.vx; 
+        this.y += this.vy; 
+        this.life -= (this.type === 'snow' ? 0.01 : 0.04); 
+      }
       draw() {
-        CTX.globalAlpha = this.life;
+        CTX.globalAlpha = Math.max(0, this.life);
         CTX.fillStyle = this.color;
         CTX.beginPath();
-        CTX.arc(this.x, this.y, 3, 0, Math.PI*2);
+        if(this.type === 'snow') {
+            CTX.arc(this.x, this.y, 2, 0, Math.PI*2);
+        } else {
+            CTX.arc(this.x, this.y, 3, 0, Math.PI*2);
+        }
         CTX.fill();
         CTX.globalAlpha = 1;
       }
@@ -389,25 +669,46 @@
     // --- GAME ENGINE ---
 
     function spawn() {
-      // CAP LIMIT: Prevents screen clutter
-      if (state.words.length >= 8) return; 
-
-      const elapsed = Date.now() - state.startTime;
-      let pool = [...WORDS.short];
+      const now = Date.now();
       
-      // Difficulty Stages
-      if(elapsed > 60000) pool = pool.concat(WORDS.medium);
-      if(elapsed > 120000) pool = pool.concat(WORDS.long);
-      if(elapsed > 180000) pool = pool.concat(WORDS.boss);
+      // === SPECIAL WORD LOGIC ===
+      // Every 60s, a special word enters the screen.
+      if (now - state.lastSpecialSpawn > 60000) {
+        state.lastSpecialSpawn = now;
+        
+        const rand = Math.random();
+        let wordObj;
+        
+        if (rand < 0.33) {
+            // Freeze: Pick one of the 3 names
+            const txt = WORDS.specialFreeze[Math.floor(Math.random() * WORDS.specialFreeze.length)];
+            wordObj = new Word(txt, 'special', 'freeze');
+        } else if (rand < 0.66) {
+            // Slow
+            const txt = WORDS.specialSlow[0];
+            wordObj = new Word(txt, 'special', 'slow');
+        } else {
+            // Double
+            const txt = WORDS.specialDouble[0];
+            wordObj = new Word(txt, 'special', 'double');
+        }
+        state.words.push(wordObj);
+        return; // Skip normal spawn this frame
+      }
+      // ==========================
+
+      if (state.words.length >= 12) return; 
+
+      const activeTime = now - state.startTime - state.totalPausedTime;
+      let pool = [...WORDS.short];
+      if(activeTime > 30000) pool = pool.concat(WORDS.medium);
+      if(activeTime > 90000) pool = pool.concat(WORDS.long);
 
       const text = pool[Math.floor(Math.random() * pool.length)];
-      
-      // Duplicate Protection
       if (state.words.some(w => w.text === text)) return;
 
       let type = 'short';
-      if(text.length > 10) type = 'boss';
-      else if(text.length > 7) type = 'long';
+      if(text.length > 7) type = 'long';
       else if(text.length > 4) type = 'medium';
 
       state.words.push(new Word(text, type));
@@ -416,36 +717,52 @@
     function loop() {
       if(!state.running) return;
       
+      if(state.paused) {
+        animationFrameId = requestAnimationFrame(loop);
+        return;
+      }
+
       CTX.clearRect(0, 0, CANVAS.width, CANVAS.height);
 
-      // 1. Update HUD Time
-      const elapsedSeconds = Math.max(1, (Date.now() - state.startTime) / 1000);
-      document.getElementById('time-val').textContent = Math.floor(elapsedSeconds) + 's';
-
-      // 2. Calculate WPM (Standard Formula: (Chars / 5) / Minutes)
-      const minutes = elapsedSeconds / 60;
-      state.wpm = Math.round((state.totalCharsCorrect / 5) / minutes);
+      const activeTime = Date.now() - state.startTime - state.totalPausedTime;
+      const activeSeconds = Math.max(1, activeTime / 1000);
+      
+      // Update Stats UI
+      document.getElementById('time-val').textContent = Math.floor(activeSeconds) + 's';
+      const minutes = activeSeconds / 60;
+      state.wpm = Math.round((state.totalCharsCorrect / 5) / minutes) || 0;
       document.getElementById('wpm-val').textContent = state.wpm;
+      
+      // Spawn Rate Calculation
+      const diffConfig = diffSettings[state.difficulty];
+      const difficultyRamp = Math.min(1200, Math.floor(activeSeconds * 12)); 
+      let spawnRate = (2000 - difficultyRamp) * diffConfig.spawnMod;
+      spawnRate = Math.max(400, spawnRate);
 
-      // 3. Spawning Logic
-      const difficulty = Math.min(1200, Math.floor(elapsedSeconds * 12)); 
-      const currentSpawnRate = Math.max(700, 2000 - difficulty);
-
-      if(Date.now() - state.lastSpawn > currentSpawnRate) {
+      if(!state.activeEffects.freeze && (Date.now() - state.lastSpawn > spawnRate)) {
         spawn();
         state.lastSpawn = Date.now();
       }
+      
+      // Snow Effect
+      if(state.activeEffects.freeze && Math.random() > 0.5) {
+         state.particles.push(new Particle(Math.random()*CANVAS.width, -10, '#fff', 'snow'));
+      }
 
-      // 4. Word Updates
+      // Logic Loop
       for(let i = state.words.length-1; i>=0; i--) {
         let w = state.words[i];
         w.update();
         w.draw();
-
-        if(w.y > CANVAS.height + 20) gameOver();
+        
+        // HIT FLOOR LOGIC (3 Lives)
+        if(w.y > CANVAS.height + 20) {
+            state.words.splice(i, 1);
+            loseLife();
+        }
       }
 
-      // 5. Particle Updates
+      // Particles
       for(let i=state.particles.length-1; i>=0; i--) {
         let p = state.particles[i];
         p.update();
@@ -455,51 +772,148 @@
 
       animationFrameId = requestAnimationFrame(loop);
     }
+    
+    function loseLife() {
+        state.lives--;
+        document.getElementById('lives-val').textContent = state.lives;
+        
+        // Visual Feedback
+        const flash = document.getElementById('damage-flash');
+        flash.style.opacity = 1;
+        setTimeout(() => flash.style.opacity = 0, 100);
+        document.body.classList.add('shake');
+        setTimeout(() => document.body.classList.remove('shake'), 300);
+
+        if(state.lives <= 0) {
+            gameOver();
+        }
+    }
 
     // --- INPUT HANDLERS ---
 
-    document.addEventListener('click', () => {
-      if(state.running) HIDDEN_INPUT.focus();
+    function togglePause() {
+      // Prevent pausing if game over or not started
+      if(!state.running && document.getElementById('game-over-screen').classList.contains('hidden')) return;
+      if(document.getElementById('start-screen').classList.contains('hidden') === false) return;
+      if(document.getElementById('game-over-screen').classList.contains('hidden') === false) return;
+
+      state.paused = !state.paused;
+      const pauseEl = document.getElementById('pause-screen');
+      const pauseBtn = document.getElementById('ui-pause-btn');
+      
+      if(state.paused) {
+        state.pauseStartTime = Date.now();
+        pauseEl.classList.remove('hidden');
+        pauseBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+        HIDDEN_INPUT.blur();
+      } else {
+        state.totalPausedTime += (Date.now() - state.pauseStartTime);
+        pauseEl.classList.add('hidden');
+        pauseBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        HIDDEN_INPUT.focus();
+      }
+    }
+
+    function activateEffect(type) {
+        state.activeEffects[type] = true;
+        
+        // Visuals in Tray
+        const elId = type === 'freeze' ? 'pu-freeze' : type === 'slow' ? 'pu-slow' : 'pu-double';
+        document.getElementById(elId).classList.add('active-effect');
+        
+        setTimeout(() => {
+            state.activeEffects[type] = false;
+            document.getElementById(elId).classList.remove('active-effect');
+        }, 5000); // 5 Seconds duration
+    }
+
+    // MOBILE TAP PAUSE (Background only)
+    document.addEventListener('touchend', (e) => {
+        if(e.target.closest('.btn') || e.target.closest('.powerup-slot') || e.target.closest('.pause-btn-hud') || e.target.closest('.diff-btn')) return;
+        if(state.running) {
+            togglePause();
+            if(!state.paused) HIDDEN_INPUT.focus();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      // Spacebar Pause
+      if (e.code === 'Space') {
+        e.preventDefault(); 
+        togglePause();
+        return;
+      }
+    });
+
+    // Handle clicks to focus input
+    document.addEventListener('click', (e) => {
+        if(e.target.closest('.pause-btn-hud')) return;
+        if(state.running && !state.paused) HIDDEN_INPUT.focus();
     });
 
     HIDDEN_INPUT.addEventListener('input', (e) => {
-      if(!state.running) return;
+      if(!state.running || state.paused) return;
 
-      const val = HIDDEN_INPUT.value.toLowerCase().trim();
+      const val = HIDDEN_INPUT.value.trim(); 
+      const lowerVal = val.toLowerCase();
       UI_DISPLAY.textContent = val;
 
-      // Find Match
-      const matchIndex = state.words.findIndex(w => w.text === val);
+      // Find match (case insensitive)
+      const matchIndex = state.words.findIndex(w => w.text.toLowerCase() === lowerVal);
 
       if(matchIndex !== -1) {
-        // --- MATCH FOUND ---
         const w = state.words[matchIndex];
         
-        // Update Stats
-        state.totalCharsCorrect += w.text.length + 1; // +1 includes the 'space' or 'enter' effort
-        state.score += w.text.length * 10;
-        document.getElementById('score-val').textContent = state.score;
+        // CHECK SPECIAL EFFECT ACTIVATION
+        // The boost only activates when the user actually types the special word
+        if(w.effect) {
+            activateEffect(w.effect);
+        }
         
-        // VFX
+        state.totalCharsCorrect += w.text.length + 1;
+        state.combo++;
+        
+        if(state.combo >= 15) state.multiplier = 5;
+        else if(state.combo >= 10) state.multiplier = 3;
+        else if(state.combo >= 5) state.multiplier = 2;
+        else state.multiplier = 1;
+
+        let finalMult = state.multiplier;
+        if(state.activeEffects.double) finalMult *= 2;
+
+        state.score += (w.text.length * 10) * finalMult;
+        
+        document.getElementById('score-val').textContent = state.score;
+        const comboEl = document.getElementById('combo-box');
+        const comboVal = document.getElementById('combo-val');
+        
+        if(state.multiplier > 1) {
+          comboEl.classList.add('combo-active');
+          comboVal.textContent = state.multiplier + 'x';
+        }
+
+        // Spawn Particles
         for(let k=0; k<12; k++) state.particles.push(new Particle(w.x + 20, w.y, w.color));
         
-        // Cleanup
         state.words.splice(matchIndex, 1);
         HIDDEN_INPUT.value = ''; 
         UI_DISPLAY.textContent = '';
       } else {
-        // --- NO MATCH ---
-        // Check if the current input is at least the START of a word on screen
-        const isPrefix = state.words.some(w => w.text.startsWith(val));
+        // Error Check
+        const isPrefix = state.words.some(w => w.text.toLowerCase().startsWith(lowerVal));
         
         if(!isPrefix && val.length > 0) {
-          // ERROR STATE
+          state.combo = 0;
+          state.multiplier = 1;
+          document.getElementById('combo-box').classList.remove('combo-active');
+          document.getElementById('combo-val').textContent = '1x';
+
           UI_DISPLAY.style.color = 'var(--error)';
           document.body.classList.add('shake');
           setTimeout(() => {
             document.body.classList.remove('shake');
             UI_DISPLAY.style.color = 'white';
-            HIDDEN_INPUT.value = ''; // Reset input on error
+            HIDDEN_INPUT.value = ''; 
             UI_DISPLAY.textContent = '';
           }, 200);
         } else {
@@ -508,70 +922,105 @@
       }
     });
 
-    // --- CONTROL FLOW ---
+    // --- INIT ---
 
     document.getElementById('start-btn').addEventListener('click', (e) => {
       e.stopPropagation();
       document.getElementById('start-screen').classList.add('hidden');
       
-      // Reset State
       if(animationFrameId) cancelAnimationFrame(animationFrameId);
       
-      state = { 
-        running: true, 
-        words: [], 
-        particles: [], 
-        score: 0, 
-        startTime: Date.now(), 
-        lastSpawn: Date.now(), 
-        totalCharsCorrect: 0,
-        wpm: 0
-      };
+      state.running = true;
+      state.paused = false;
+      state.words = [];
+      state.particles = [];
+      state.score = 0;
+      state.lives = 3;
+      state.startTime = Date.now();
+      state.totalPausedTime = 0;
+      state.lastSpawn = Date.now();
+      state.lastSpecialSpawn = Date.now(); 
+      state.combo = 0;
+      state.multiplier = 1;
+      state.wpm = 0;
+      state.totalCharsCorrect = 0;
+      state.activeEffects = { slow: false, freeze: false, double: false };
       
       // Reset UI
+      document.getElementById('score-val').textContent = '0';
+      document.getElementById('lives-val').textContent = '3';
+      document.getElementById('wpm-val').textContent = '0';
+      document.getElementById('time-val').textContent = '0s';
+      document.getElementById('combo-box').classList.remove('combo-active');
+      document.querySelectorAll('.powerup-slot').forEach(el => el.classList.remove('active-effect'));
+
       HIDDEN_INPUT.value = '';
       UI_DISPLAY.textContent = '';
-      document.getElementById('score-val').textContent = '0';
-      document.getElementById('time-val').textContent = '0s';
-      document.getElementById('wpm-val').textContent = '0';
-
       HIDDEN_INPUT.focus();
       loop();
     });
 
-    // Share Button Logic
+    // --- SHARE & GAMEOVER ---
     document.getElementById('share-btn').addEventListener('click', async (e) => {
       e.stopPropagation();
-      const text = `I reached ${state.wpm} WPM with a score of ${state.score} in Word Rain! Can you hack the system?`;
       
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'Word Rain Score',
-            text: text,
-            url: window.location.href
-          });
-        } catch (err) { console.log('Share closed'); }
-      } else {
-        navigator.clipboard.writeText(text).then(() => {
-          const msg = document.getElementById('copy-msg');
-          msg.style.opacity = 1;
-          setTimeout(() => msg.style.opacity = 0, 2000);
-        });
-      }
+      const text = `🎮 WORD RAIN - ENDLESS HACK 🎮\n\n👾 SCORE: ${state.score}\n⚡ WPM: ${state.wpm}\n🏆 HIGH SCORE: ${savedHighScore}\n\nCan you beat the beast? #WordRain #Cyberpunk`;
+      
+      const shareData = {
+        title: 'Word Rain | Endless Mode',
+        text: text,
+        url: window.location.href
+      };
+      
+      try {
+        if (navigator.share) {
+             await navigator.share(shareData);
+        } else {
+             copyToClipboard(text);
+        }
+      } catch (err) { copyToClipboard(text); }
     });
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const msg = document.getElementById('copy-msg');
+        msg.style.opacity = 1;
+        setTimeout(() => msg.style.opacity = 0, 2000);
+      });
+    }
 
     function gameOver() {
       state.running = false;
       HIDDEN_INPUT.blur();
       cancelAnimationFrame(animationFrameId);
       
-      document.getElementById('game-over-screen').classList.remove('hidden');
+      const goScreen = document.getElementById('game-over-screen');
+      goScreen.classList.remove('hidden');
+      
+      // Stats
       document.getElementById('final-score').textContent = state.score;
       document.getElementById('final-wpm').textContent = state.wpm;
       
-      const seconds = Math.floor((Date.now() - state.startTime) / 1000);
-      document.getElementById('final-time').textContent = "Survival Time: " + seconds + "s";
+      // Difficulty Badge
+      const diffBadge = document.getElementById('go-diff-badge');
+      diffBadge.textContent = state.difficulty;
+      diffBadge.className = 'diff-badge-display'; 
+      if(state.difficulty === 'insane') diffBadge.classList.add('insane');
+
+      const hsBanner = document.getElementById('hs-anim-container');
+      
+      // CHECK HIGH SCORE
+      if(state.score > savedHighScore) {
+          savedHighScore = state.score;
+          localStorage.setItem('wordRainHighScore', savedHighScore);
+          
+          // Trigger Animation
+          hsBanner.classList.add('animate');
+      } else {
+          hsBanner.classList.remove('animate');
+      }
+      
+      document.getElementById('final-highscore').textContent = savedHighScore;
     }
 
   </script>
