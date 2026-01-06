@@ -3,21 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="Word Rain: Endless Cyberpunk Typing. Beat your High Score.">
+  <meta name="description" content="Word Rain: Endless Cyberpunk Typing.">
   <meta name="theme-color" content="#050510">
-  
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Word Rain | Endless Mode">
-  <meta property="og:description" content="New High Score Achieved! Can you beat the mainframe?">
-  <meta property="og:image" content="share.png"> 
-
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⌨️</text></svg>">
-
   <title>Word Rain || Endless</title>
-    
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;800&display=swap" rel="stylesheet">
-    
+  
   <style>
     :root {
       --primary: #00f3ff;
@@ -102,7 +94,6 @@
     .stat-value { font-size: 1.2rem; font-weight: 800; font-family: 'Orbitron'; color: var(--primary); }
     .wpm-val { color: var(--success); }
     
-    /* PAUSE BUTTON (New) */
     .pause-btn-hud {
       pointer-events: auto;
       background: rgba(0, 243, 255, 0.1);
@@ -120,7 +111,7 @@
       color: #000;
       box-shadow: 0 0 15px var(--primary);
     }
-     
+      
     /* COMBO INDICATOR */
     #combo-box {
       margin-top: 10px;
@@ -155,7 +146,6 @@
       transition: all 0.3s;
     }
     
-    /* Active state when typed */
     .powerup-slot.active-effect {
       border-color: var(--success);
       color: var(--success);
@@ -195,10 +185,10 @@
     }
 
     /* MODAL SCREENS */
-    #start-screen, #game-over-screen, #pause-screen {
+    #loading-screen, #start-screen, #game-over-screen, #pause-screen {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(5, 5, 16, 0.95);
+      background: rgba(5, 5, 16, 0.98);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -207,6 +197,50 @@
       backdrop-filter: blur(8px);
       text-align: center;
       padding: 20px;
+    }
+
+    /* LOADING SCREEN SPECIFIC */
+    #loading-screen {
+        z-index: 200;
+    }
+    .roller-container {
+        font-family: 'Orbitron';
+        font-size: 2rem;
+        color: var(--primary);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+        height: 150px;
+        overflow: hidden;
+        position: relative;
+        mask-image: linear-gradient(transparent, black 20%, black 80%, transparent);
+        -webkit-mask-image: linear-gradient(transparent, black 20%, black 80%, transparent);
+    }
+    .roller-word {
+        opacity: 0.5;
+        transition: all 0.1s;
+    }
+    .roller-word.highlight {
+        color: var(--gold);
+        opacity: 1;
+        font-size: 2.5rem;
+        text-shadow: 0 0 20px var(--gold);
+    }
+    .loading-bar {
+        width: 200px;
+        height: 4px;
+        background: #333;
+        margin-top: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    .loading-progress {
+        position: absolute;
+        top:0; left:0; height: 100%; width: 0%;
+        background: var(--primary);
+        box-shadow: 0 0 10px var(--primary);
+        transition: width 0.1s linear;
     }
 
     .skill-tagline {
@@ -248,7 +282,6 @@
       box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
     }
 
-    /* INSANE MODE STYLE */
     .diff-btn[data-diff="insane"].selected {
       border-color: var(--error);
       color: var(--error);
@@ -298,7 +331,6 @@
       position: relative;
     }
 
-    /* DIFFICULTY BADGE IN GAME OVER */
     .diff-badge-display {
         position: absolute;
         top: -12px;
@@ -328,7 +360,6 @@
       transition: opacity 0.5s;
     }
     
-    /* NEW HIGH SCORE ANIMATION */
     .highscore-banner {
         font-family: 'Orbitron';
         font-size: 1.2rem;
@@ -353,7 +384,6 @@
         100% { width: 100%; opacity: 1; transform: translateX(0); }
     }
 
-    /* ERROR ANIMATION */
     .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
     @keyframes shake {
       10%, 90% { transform: translate3d(-1px, 0, 0); }
@@ -369,6 +399,18 @@
         pointer-events: none;
         opacity: 0;
         transition: opacity 0.1s;
+    }
+    
+    .easter-egg-glitch {
+        animation: glitch-anim 0.3s infinite;
+    }
+    @keyframes glitch-anim {
+        0% { transform: translate(0) }
+        20% { transform: translate(-5px, 5px) }
+        40% { transform: translate(-5px, -5px) }
+        60% { transform: translate(5px, 5px) }
+        80% { transform: translate(5px, -5px) }
+        100% { transform: translate(0) }
     }
   </style>
 </head>
@@ -432,7 +474,21 @@
     </div>
   </div>
 
-  <div id="start-screen">
+  <div id="loading-screen">
+      <div class="roller-container" id="word-roller">
+          <div class="roller-word">INITIALIZING</div>
+          <div class="roller-word">LOADING</div>
+          <div class="roller-word highlight">SYSTEM</div>
+          <div class="roller-word">DATA</div>
+          <div class="roller-word">STREAM</div>
+      </div>
+      <div style="font-size:0.8rem; color:#888; letter-spacing:2px; margin-top:10px;">ESTABLISHING NEURAL HANDSHAKE...</div>
+      <div class="loading-bar">
+          <div class="loading-progress" id="load-progress"></div>
+      </div>
+  </div>
+
+  <div id="start-screen" class="hidden">
     <h1 style="font-family:'Orbitron'; color:var(--primary); font-size: 2.8rem; margin-bottom: 5px; text-shadow: 0 0 20px var(--primary);">SYSTEM READY</h1>
     <div class="skill-tagline">
       Endless Mode • High Score Chaser
@@ -493,7 +549,7 @@
 
   <script>
     /** * WORD RAIN - ENDLESS V2.2
-     * Features: Lives, Special Words, Difficulty, WPM, Endless, Highscore
+     * Features: Lives, Special Words, Difficulty, WPM, Endless, Highscore, WebAudio, Loading
      */
 
     // --- CONFIG ---
@@ -522,7 +578,59 @@
       // SPECIAL TRIGGER WORDS
       specialFreeze: ['Leon', 'Aminah', 'BeastJr'],
       specialSlow: ['musk'],
-      specialDouble: ['Dangote']
+      specialDouble: ['Dangote'],
+      // EASTER EGGS (Hidden)
+      easterEggs: ['hack', 'system', 'neo', 'trinity', 'wake up']
+    };
+
+    // --- AUDIO ENGINE (Web Audio API) ---
+    const AudioEngine = {
+        ctx: null,
+        init: function() {
+            if(!this.ctx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+            }
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+        },
+        playTone: function(freq, type, duration, vol = 0.1) {
+            if(!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+        },
+        playClick: function() { this.playTone(800 + Math.random()*200, 'sine', 0.1, 0.05); },
+        playError: function() { 
+            this.playTone(150, 'sawtooth', 0.3, 0.1); 
+            this.playTone(100, 'square', 0.3, 0.1); 
+        },
+        playPowerup: function() {
+            if(!this.ctx) return;
+            const now = this.ctx.currentTime;
+            [440, 554, 659, 880].forEach((f, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(f, now + i*0.1);
+                gain.gain.setValueAtTime(0.1, now + i*0.1);
+                gain.gain.linearRampToValueAtTime(0, now + i*0.1 + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + i*0.1);
+                osc.stop(now + i*0.1 + 0.3);
+            });
+        },
+        playLifeLost: function() { this.playTone(100, 'sawtooth', 0.5, 0.2); },
+        playGlitch: function() {
+             for(let i=0; i<5; i++) this.playTone(Math.random()*1000, 'square', 0.05, 0.05);
+        }
     };
 
     // --- STATE MANAGEMENT ---
@@ -562,6 +670,60 @@
       });
     }
 
+    // --- LOADING SCREEN LOGIC ---
+    function initLoadingSequence() {
+        const roller = document.getElementById('word-roller');
+        const progress = document.getElementById('load-progress');
+        const allWords = [...WORDS.short, ...WORDS.medium];
+        
+        let progressVal = 0;
+        
+        const rollInterval = setInterval(() => {
+            // Pick 3 random words
+            let html = '';
+            for(let i=0; i<5; i++) {
+                const w = allWords[Math.floor(Math.random() * allWords.length)].toUpperCase();
+                const isCenter = i === 2;
+                html += `<div class="roller-word ${isCenter ? 'highlight' : ''}">${w}</div>`;
+            }
+            roller.innerHTML = html;
+        }, 100);
+
+        const progInterval = setInterval(() => {
+            progressVal += 1; // 100 steps over 5000ms approx
+            progress.style.width = progressVal + '%';
+            if(progressVal >= 100) {
+                clearInterval(progInterval);
+                clearInterval(rollInterval);
+                finishLoading();
+            }
+        }, 50); // 50ms * 100 = 5000ms
+    }
+    
+    function finishLoading() {
+        const loadingScreen = document.getElementById('loading-screen');
+        const startScreen = document.getElementById('start-screen');
+        
+        loadingScreen.style.opacity = 0;
+        loadingScreen.style.pointerEvents = 'none';
+        
+        setTimeout(() => {
+            loadingScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            startScreen.style.opacity = 0;
+            // Fade in start
+            let op = 0;
+            const fadeId = setInterval(() => {
+                op += 0.1;
+                startScreen.style.opacity = op;
+                if(op >= 1) clearInterval(fadeId);
+            }, 50);
+        }, 500);
+    }
+    
+    // Start Loading Immediately
+    initLoadingSequence();
+
     // --- CLASSES ---
     class Word {
       constructor(text, type, effect = null) {
@@ -577,7 +739,7 @@
         if(type === 'short') baseSpeed = 1.2;
         else if(type === 'medium') baseSpeed = 1.0;
         else if(type === 'long') baseSpeed = 0.8;
-        else if(type === 'special') baseSpeed = 0.5; // Special words fall slightly slower to give chance
+        else if(type === 'special') baseSpeed = 0.6; // Slightly slower for readability
 
         const activeTime = (Date.now() - state.startTime - state.totalPausedTime) / 1000;
         let timeMultiplier = 1 + (activeTime * 0.015); 
@@ -671,16 +833,15 @@
     function spawn() {
       const now = Date.now();
       
-      // === SPECIAL WORD LOGIC ===
-      // Every 60s, a special word enters the screen.
-      if (now - state.lastSpecialSpawn > 60000) {
+      // === SPECIAL WORD LOGIC (Increased frequency to 25s) ===
+      if (now - state.lastSpecialSpawn > 25000) {
         state.lastSpecialSpawn = now;
         
         const rand = Math.random();
         let wordObj;
         
         if (rand < 0.33) {
-            // Freeze: Pick one of the 3 names
+            // Freeze
             const txt = WORDS.specialFreeze[Math.floor(Math.random() * WORDS.specialFreeze.length)];
             wordObj = new Word(txt, 'special', 'freeze');
         } else if (rand < 0.66) {
@@ -755,7 +916,7 @@
         w.update();
         w.draw();
         
-        // HIT FLOOR LOGIC (3 Lives)
+        // HIT FLOOR LOGIC
         if(w.y > CANVAS.height + 20) {
             state.words.splice(i, 1);
             loseLife();
@@ -777,6 +938,8 @@
         state.lives--;
         document.getElementById('lives-val').textContent = state.lives;
         
+        AudioEngine.playLifeLost();
+
         // Visual Feedback
         const flash = document.getElementById('damage-flash');
         flash.style.opacity = 1;
@@ -792,7 +955,6 @@
     // --- INPUT HANDLERS ---
 
     function togglePause() {
-      // Prevent pausing if game over or not started
       if(!state.running && document.getElementById('game-over-screen').classList.contains('hidden')) return;
       if(document.getElementById('start-screen').classList.contains('hidden') === false) return;
       if(document.getElementById('game-over-screen').classList.contains('hidden') === false) return;
@@ -816,6 +978,7 @@
 
     function activateEffect(type) {
         state.activeEffects[type] = true;
+        AudioEngine.playPowerup();
         
         // Visuals in Tray
         const elId = type === 'freeze' ? 'pu-freeze' : type === 'slow' ? 'pu-slow' : 'pu-double';
@@ -825,6 +988,23 @@
             state.activeEffects[type] = false;
             document.getElementById(elId).classList.remove('active-effect');
         }, 5000); // 5 Seconds duration
+    }
+    
+    function triggerEasterEgg(word) {
+        AudioEngine.playGlitch();
+        state.score += 500;
+        document.getElementById('score-val').textContent = state.score;
+        document.body.classList.add('easter-egg-glitch');
+        const prevInput = UI_DISPLAY.style.color;
+        UI_DISPLAY.style.color = '#bc13fe';
+        UI_DISPLAY.textContent = "SYSTEM HACKED";
+        
+        setTimeout(() => {
+            document.body.classList.remove('easter-egg-glitch');
+            UI_DISPLAY.style.color = prevInput;
+            UI_DISPLAY.textContent = "";
+            HIDDEN_INPUT.value = '';
+        }, 500);
     }
 
     // MOBILE TAP PAUSE (Background only)
@@ -837,7 +1017,6 @@
     });
 
     document.addEventListener('keydown', (e) => {
-      // Spacebar Pause
       if (e.code === 'Space') {
         e.preventDefault(); 
         togglePause();
@@ -853,19 +1032,26 @@
 
     HIDDEN_INPUT.addEventListener('input', (e) => {
       if(!state.running || state.paused) return;
+      
+      AudioEngine.playClick();
 
       const val = HIDDEN_INPUT.value.trim(); 
       const lowerVal = val.toLowerCase();
       UI_DISPLAY.textContent = val;
+      
+      // EASTER EGG CHECK
+      if(WORDS.easterEggs.includes(lowerVal)) {
+          triggerEasterEgg(lowerVal);
+          return;
+      }
 
-      // Find match (case insensitive)
+      // Find match
       const matchIndex = state.words.findIndex(w => w.text.toLowerCase() === lowerVal);
 
       if(matchIndex !== -1) {
         const w = state.words[matchIndex];
         
         // CHECK SPECIAL EFFECT ACTIVATION
-        // The boost only activates when the user actually types the special word
         if(w.effect) {
             activateEffect(w.effect);
         }
@@ -903,6 +1089,7 @@
         const isPrefix = state.words.some(w => w.text.toLowerCase().startsWith(lowerVal));
         
         if(!isPrefix && val.length > 0) {
+          AudioEngine.playError();
           state.combo = 0;
           state.multiplier = 1;
           document.getElementById('combo-box').classList.remove('combo-active');
@@ -926,6 +1113,10 @@
 
     document.getElementById('start-btn').addEventListener('click', (e) => {
       e.stopPropagation();
+      
+      AudioEngine.init(); // Init Audio Context on user gesture
+      AudioEngine.playClick();
+      
       document.getElementById('start-screen').classList.add('hidden');
       
       if(animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -985,6 +1176,7 @@
       navigator.clipboard.writeText(text).then(() => {
         const msg = document.getElementById('copy-msg');
         msg.style.opacity = 1;
+        msg.textContent = "Stats copied to clipboard!";
         setTimeout(() => msg.style.opacity = 0, 2000);
       });
     }
@@ -993,6 +1185,8 @@
       state.running = false;
       HIDDEN_INPUT.blur();
       cancelAnimationFrame(animationFrameId);
+      
+      AudioEngine.playError(); // Game over sound
       
       const goScreen = document.getElementById('game-over-screen');
       goScreen.classList.remove('hidden');
